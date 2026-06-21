@@ -1,0 +1,47 @@
+<h1>文章列表</h1>
+
+<div class="card">
+  <div style="margin-bottom:12px;display:flex;gap:8px">
+    <a href="/articles" class="btn <%= filter === 'all' ? 'btn-primary' : '' %>">全部</a>
+    <a href="/articles?status=draft" class="btn <%= filter === 'draft' ? 'btn-primary' : '' %>">草稿</a>
+    <a href="/articles?status=published" class="btn <%= filter === 'published' ? 'btn-primary' : '' %>">已发布</a>
+    <a href="/articles?status=failed" class="btn <%= filter === 'failed' ? 'btn-primary' : '' %>">失败</a>
+  </div>
+
+  <% if (articles.length === 0) { %>
+    <div class="empty">暂无文章</div>
+  <% } else { %>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>标题</th>
+          <th>状态</th>
+          <th>来源</th>
+          <th>创建时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% articles.forEach(a => { %>
+          <tr>
+            <td><a href="/articles/<%= a.id %>"><%= a.title.slice(0, 30) %></a></td>
+            <td><span class="badge badge-<%= a.status %>"><%= a.status === 'draft' ? '草稿' : a.status === 'published' ? '已发布' : '失败' %></span></td>
+            <td><%= a.source === 'ai' ? 'AI生成' : a.source === 'rss' ? 'RSS改写' : '手动' %></td>
+            <td><%= new Date(a.createdAt).toLocaleDateString() %></td>
+            <td class="inline-flex">
+              <a href="/articles/<%= a.id %>" class="btn btn-primary btn-sm">查看</a>
+              <% if (a.status === 'draft') { %>
+                <form action="/articles/<%= a.id %>/publish" method="POST" style="display:inline">
+                  <button class="btn btn-primary btn-sm">发布</button>
+                </form>
+              <% } %>
+              <form action="/articles/<%= a.id %>/delete" method="POST" style="display:inline" onsubmit="return confirm('确定删除？')">
+                <button class="btn btn-danger btn-sm">删除</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>

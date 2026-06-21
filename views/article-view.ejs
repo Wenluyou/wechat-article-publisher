@@ -1,0 +1,100 @@
+<div style="margin-bottom:12px">
+  <a href="/articles" class="btn btn-primary btn-sm">← 返回列表</a>
+  <% if (article.status === 'draft') { %>
+    <form action="/articles/<%= article.id %>/publish" method="POST" style="display:inline">
+      <button class="btn btn-primary btn-sm ml-2">发布到公众号</button>
+    </form>
+  <% } %>
+  <form action="/articles/<%= article.id %>/delete" method="POST" style="display:inline" onsubmit="return confirm('确定删除？')">
+    <button class="btn btn-danger btn-sm ml-2">删除</button>
+  </form>
+</div>
+
+<div class="card">
+  <h1 style="font-size:22px;margin-bottom:8px"><%= article.title %></h1>
+  <div style="display:flex;gap:12px;font-size:13px;color:#666;margin-bottom:16px">
+    <span>状态: <span class="badge badge-<%= article.status %>"><%= article.status === 'draft' ? '草稿' : article.status === 'published' ? '已发布' : '失败' %></span></span>
+    <span>来源: <%= article.source === 'ai' ? 'AI生成' : article.source === 'rss' ? 'RSS改写' : '手动' %></span>
+    <span>创建: <%= new Date(article.createdAt).toLocaleString() %></span>
+    <% if (article.publishedAt) { %>
+      <span>发布时间: <%= new Date(article.publishedAt).toLocaleString() %></span>
+    <% } %>
+  </div>
+  <% if (article.error) { %>
+    <div style="background:#f8d7da;color:#721c24;padding:8px 12px;border-radius:4px;margin-bottom:12px;font-size:13px">
+      错误: <%= article.error %>
+    </div>
+  <% } %>
+  <% if (article.wechatUrl) { %>
+    <div style="background:#d4edda;color:#155724;padding:8px 12px;border-radius:4px;margin-bottom:12px;font-size:13px">
+      已发布: <a href="<%= article.wechatUrl %>" target="_blank"><%= article.wechatUrl %></a>
+    </div>
+  <% } %>
+  <hr style="border:none;border-top:1px solid #eee;margin-bottom:16px">
+  <div class="article-content">
+    <%- article.content.replace(/\n/g, '<br>') %>
+  </div>
+</div>
+
+<div class="card" style="margin-top:20px">
+  <h2 style="font-size:16px;margin-bottom:12px">生成配图</h2>
+  <form id="imageForm" style="display:flex;flex-direction:column;gap:10px">
+    <input type="hidden" name="articleId" value="<%= article.id %>">
+    <textarea id="imagePrompt" placeholder="输入图片描述，例如：一个美丽的日落场景，有山脉和湖泊" rows="3" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:14px"></textarea>
+    <div style="display:flex;gap:10px;align-items:center">
+      <select id="imageSize" style="padding:8px;border:1px solid #ddd;border-radius:4px">
+        <option value="1024x1024">1024x1024 (方形)</option>
+        <option value="1024x1536">1024x1536 (竖版)</option>
+        <option value="1536x1024">1536x1024 (横版)</option>
+        <option value="512x512">512x512 (小图)</option>
+      </select>
+      <button type="submit" class="btn btn-primary btn-sm" id="generateBtn">生成图片</button>
+    </div>
+  </form>
+  <div id="imageResult" style="margin-top:12px"></div>
+</div>
+
+<script>
+document.getElementById('imageForm').addEventListener('submit', async (e) => {
+  e.preventDefault()
+  const prompt = document.getElementById('imagePrompt').value.trim()
+  const size = document.getElementById('imageSize').value
+  const articleId = document.querySelector('input[name="articleId"]').value
+  const btn = document.getElementById('generateBtn')
+  const result = document.getElementById('imageResult')
+
+  if (!prompt) {
+    alert('请输入图片描述')
+    return
+  }
+
+  btn.disabled = true
+  btn.textContent = '生成中...'
+  result.innerHTML = '<p style="color:#666;font-size:13px">正在生成图片，请稍候...</p>'
+
+  try {
+    const resp = await fetch('/articles/image/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, articleId, size }),
+    })
+    const data = await resp.json()
+
+    if (data.success && data.imageUrl) {
+      result.innerHTML = `
+        <div style="margin-top:8px">
+          <img src="${data.imageUrl}" style="max-width:100%;border-radius:4px" alt="Generated image">
+          <p style="font-size:12px;color:#666;margin-top:6px">图片已保存</p>
+        </div>
+      `
+    } else {
+      result.innerHTML = `<div style="background:#f8d7da;color:#721c24;padding:8px;border-radius:4px;font-size:13px">生成失败: ${data.error}</div>`
+    }
+  } catch (err) {
+    result.innerHTML = `<div style="background:#f8d7da;color:#721c24;padding:8px;border-radius:4px;font-size:13px">请求失败: ${err.message}</div>`
+  } finally {
+    btn.disabled = false
+    btn.textContent = '生成图片'
+  }
+})
+</script>

@@ -1,0 +1,73 @@
+<div class="stats">
+  <div class="stat-card"><div class="num"><%= stats.total %></div><div class="label">全部文章</div></div>
+  <div class="stat-card"><div class="num"><%= stats.draft %></div><div class="label">草稿</div></div>
+  <div class="stat-card"><div class="num"><%= stats.published %></div><div class="label">已发布</div></div>
+  <div class="stat-card"><div class="num"><%= stats.failed %></div><div class="label">失败</div></div>
+</div>
+
+<div class="card">
+  <h2>快速操作</h2>
+  <form action="/articles/generate" method="POST" style="margin-bottom:12px">
+    <div class="form-group">
+      <label>输入主题，AI 自动生成文章</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" name="topic" placeholder="例如：2025年人工智能发展趋势" style="flex:1">
+        <button type="submit" class="btn btn-primary">生成</button>
+      </div>
+    </div>
+  </form>
+  <form action="/articles/manual" method="POST">
+    <div class="form-group">
+      <label>手动创建文章</label>
+      <input type="text" name="title" placeholder="文章标题" style="margin-bottom:8px">
+      <textarea name="content" placeholder="文章内容 (Markdown 格式)"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">保存草稿</button>
+  </form>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <h2>最近文章</h2>
+    <% if (articles.length === 0) { %>
+      <div class="empty">暂无文章</div>
+    <% } else { %>
+      <table class="table">
+        <thead><tr><th>标题</th><th>状态</th><th>来源</th><th></th></tr></thead>
+        <tbody>
+          <% articles.slice(0, 5).forEach(a => { %>
+            <tr>
+              <td><a href="/articles/<%= a.id %>"><%= a.title.slice(0, 20) %></a></td>
+              <td><span class="badge badge-<%= a.status %>"><%= a.status === 'draft' ? '草稿' : a.status === 'published' ? '已发布' : '失败' %></span></td>
+              <td><%= a.source %></td>
+              <td>
+                <% if (a.status === 'draft') { %>
+                  <form action="/articles/<%= a.id %>/publish" method="POST" style="display:inline">
+                    <button class="btn btn-primary btn-sm">发布</button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+
+  <div class="card">
+    <h2>定时发布</h2>
+    <p style="margin-bottom:8px;color:#666">
+      状态: <strong><%= schedule.enabled ? '已启用' : '已禁用' %></strong>
+    </p>
+    <p style="margin-bottom:8px;color:#666">
+      Cron: <code><%= schedule.cron %></code>
+    </p>
+    <p style="margin-bottom:12px;color:#666">
+      每轮最多: <%= schedule.maxArticlesPerRun %> 篇
+    </p>
+    <form action="/settings/pipeline/run" method="POST" style="display:inline">
+      <button class="btn btn-primary btn-sm">立即执行一次</button>
+    </form>
+    <a href="/settings" class="btn btn-primary btn-sm" style="margin-left:4px">修改设置</a>
+  </div>
+</div>
