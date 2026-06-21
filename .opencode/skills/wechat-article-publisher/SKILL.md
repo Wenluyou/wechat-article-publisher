@@ -1,10 +1,20 @@
 ---
 name: wechat-article-publisher
-description: 微信公众号文章自动发布系统 - AI生成/RSS改写文章并发布到公众号
+description: 微信公众号文章自动发布 - AI写作/RSS改写/定时发布/配图生成/Express服务器管理
 metadata:
   stack: "Express, TypeScript, OpenAI, node-cron, EJS"
   port: "3000"
 ---
+
+## 触发关键词
+
+当用户提到以下内容时，加载本 skill：
+- "公众号"、"微信文章"、"发布文章"
+- "AI写作"、"生成文章"、"写一篇文章"
+- "配图"、"生成图片"
+- "RSS"、"定时发布"、"自动发布"
+- "启动服务器"、"npm run dev"
+- 任何在 `公众号` 目录下操作相关代码或配置的请求
 
 ## 项目概述
 
